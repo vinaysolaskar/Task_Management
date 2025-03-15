@@ -15,20 +15,12 @@ const {
   adminOperationLimiter
 } = require('./middleware/rateLimitMiddleware');
 const cors = require('cors');
+const { logUserRequest, logTaskRequest } = require('./middleware/loggingMiddleware');
 
 app.use(cors());
 
 dotenv.config();
 app.use(express.json());
-
-// Logging middleware
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  res.on('finish', () => {
-    console.log(`Response status: ${res.statusCode}`);
-  });
-  next();
-});
 
 app.use('/api/auth/register', registrationLimiter);
 app.use('/api/auth/login', loginLimiter);
@@ -38,8 +30,8 @@ app.use('/api/task/update', taskUpdateLimiter);
 app.use('/api/task/delete', taskDeletionLimiter);
 app.use('/api/admin', adminOperationLimiter);
 
-app.use('/api/auth', authRoutes);
-app.use('/api/task', taskRoutes);
+app.use('/api/auth', logUserRequest, authRoutes);
+// app.use('/api/task', logTaskRequest, taskRoutes);
 
 swaggerSetup(app);
 

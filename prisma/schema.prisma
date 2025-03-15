@@ -18,7 +18,8 @@ model User {
   email     String   @unique
   password  String
   role      String   @default("user") // user/admin
-  tasks     Task[]   
+  tasks     Task[]
+  userlogs      UserLog[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -30,9 +31,28 @@ model Task {
   fileUrl     String?  
   fileName    String?  
   status      String   @default("pending")
+  tasklogs      TaskLog[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   userId      Int
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  requestType String
+  createdAt   DateTime @default(now())
+  response    String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TaskLog {
+  id          Int      @id @default(autoincrement())
+  taskId      Int
+  requestType String
+  createdAt   DateTime @default(now())
+  response    String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
