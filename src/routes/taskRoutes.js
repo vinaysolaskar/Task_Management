@@ -92,6 +92,38 @@ router.put('/updateTask/:id', authenticate, taskUpdateLimiter, updateTask, logTa
 
 /**
  * @swagger
+ * /api/task/updateTaskStatus/{id}:
+ *   put:
+ *     summary: Update task status by ID
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Task ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Task updated successfully
+ *       404:
+ *         description: Task not found
+ */
+router.put('/updateTaskStatus/:id', authenticate, taskUpdateLimiter, updateTaskStatus, logTaskRequest);
+
+/**
+ * @swagger
  * /api/task/deleteTask/{id}:
  *   delete:
  *     summary: Delete a task by ID

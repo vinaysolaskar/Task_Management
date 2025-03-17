@@ -17,9 +17,9 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
-  role      String   @default("user") // user/admin
+  role      String   @default("user") 
   tasks     Task[]
-  userlogs      UserLog[]
+  userlogs  UserLog[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -31,9 +31,10 @@ model Task {
   fileUrl     String?  
   fileName    String?  
   status      String   @default("pending")
-  tasklogs      TaskLog[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  startTask   DateTime?
+  endTask     DateTime?
   userId      Int
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -44,7 +45,7 @@ model UserLog {
   requestType String
   createdAt   DateTime @default(now())
   response    String
-  responseBody String?   // Add this line
+  responseBody String?   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -54,7 +55,6 @@ model TaskLog {
   requestType String
   createdAt   DateTime @default(now())
   response    String
-  responseBody String?   // Add this line
-  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  responseBody String?  
 }
 

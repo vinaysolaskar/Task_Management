@@ -51,10 +51,6 @@ const logTaskRequest = async (req, res, next) => {
     if (taskId) {
       // Check if the task exists before creating a log entry
       console.log("Task ID in logTaskRequest:", taskId);
-      const taskExists = await prisma.task.findUnique({
-        where: { id: taskId },
-      });
-      if (taskExists) {
         await prisma.taskLog.create({
           data: {
             taskId: taskId,
@@ -63,9 +59,6 @@ const logTaskRequest = async (req, res, next) => {
             responseBody: responseMessage,
           }
         });
-      } else {
-        console.error(`Task with ID ${taskId} does not exist.`);
-      }
     }
   });
 

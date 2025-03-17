@@ -195,7 +195,7 @@ const deleteTask = retryMiddleware(async (req, res, next) => {
   }
 }, { onRetry: logTaskRequest });
 
-const updateTaskStatus = retryMiddleware(async (req, res) => {
+const updateTaskStatus = retryMiddleware(async (req, res, next) => {
   try {
     const { status } = req.body;
     const { id } = req.params;
@@ -206,6 +206,7 @@ const updateTaskStatus = retryMiddleware(async (req, res) => {
     }
 
     const taskId = parseInt(id, 10);
+    req.taskId = taskId;
 
     if (isNaN(taskId)) {
       return res.status(400).json({ message: 'Invalid task ID' });
@@ -230,8 +231,9 @@ const updateTaskStatus = retryMiddleware(async (req, res) => {
       where: { id: taskId },
       data: { status },
     });
-
-    res.status(200).json(updatedTask);
+    res.locals.response = 'Task status updated successfully';
+    res.status(200).json({ message: res.locals.response, tasks: updatedTask });
+    next();
   } catch (error) {
     console.error('Error updating task status:', error);
     res.locals.response = `message: Error updating task status error: ${error.message}`;
