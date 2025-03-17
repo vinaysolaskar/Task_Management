@@ -44,6 +44,7 @@ model UserLog {
   requestType String
   createdAt   DateTime @default(now())
   response    String
+  responseBody String?   // Add this line
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -53,6 +54,7 @@ model TaskLog {
   requestType String
   createdAt   DateTime @default(now())
   response    String
+  responseBody String?   // Add this line
   task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 

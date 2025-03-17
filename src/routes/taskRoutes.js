@@ -38,7 +38,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/create', authenticate, taskCreationLimiter, upload.single('file'), logTaskRequest, createTask);
+router.post('/create', authenticate, taskCreationLimiter, upload.single('file'), createTask, logTaskRequest);
 
 /**
  * @swagger
@@ -54,7 +54,7 @@ router.post('/create', authenticate, taskCreationLimiter, upload.single('file'),
  *       401:
  *         description: Unauthorized
  */
-router.get('/getTasks', authenticate, logTaskRequest, getTasks);
+router.get('/getTasks', authenticate, getTasks, logTaskRequest);
 
 /**
  * @swagger
@@ -88,7 +88,7 @@ router.get('/getTasks', authenticate, logTaskRequest, getTasks);
  *       404:
  *         description: Task not found
  */
-router.put('/updateTask/:id', authenticate, taskUpdateLimiter, logTaskRequest, updateTask);
+router.put('/updateTask/:id', authenticate, taskUpdateLimiter, updateTask, logTaskRequest);
 
 /**
  * @swagger
@@ -111,6 +111,6 @@ router.put('/updateTask/:id', authenticate, taskUpdateLimiter, logTaskRequest, u
  *       404:
  *         description: Task not found
  */
-router.delete('/deleteTask/:id', authenticate, taskDeletionLimiter, logTaskRequest, deleteTask);
+router.delete('/deleteTask/:id', authenticate, taskDeletionLimiter, deleteTask, logTaskRequest);
 
 module.exports = router;

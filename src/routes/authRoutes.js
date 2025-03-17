@@ -35,7 +35,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/register', registrationLimiter, logUserRequest, register);
+router.post('/register', registrationLimiter, register, logUserRequest);
 
 /**
  * @swagger
@@ -60,7 +60,7 @@ router.post('/register', registrationLimiter, logUserRequest, register);
  *       401:
  *         description: Unauthorized
  */
-router.post('/login', loginLimiter, logUserRequest, login);
+router.post('/login', loginLimiter, login, logUserRequest);
 
 /**
  * @swagger
@@ -83,7 +83,7 @@ router.post('/login', loginLimiter, logUserRequest, login);
  *       404:
  *         description: User not found
  */
-router.delete('/:id', authenticate, adminOperationLimiter, logUserRequest, deleteUser);
+router.delete('/:id', authenticate, adminOperationLimiter, deleteUser, logUserRequest);
 
 /**
  * @swagger
@@ -108,6 +108,6 @@ router.delete('/:id', authenticate, adminOperationLimiter, logUserRequest, delet
  *       400:
  *         description: Bad request
  */
-router.delete('/', authenticate, adminOperationLimiter, logUserRequest, deleteMultipleUsers);
+router.delete('/', authenticate, adminOperationLimiter, deleteMultipleUsers, logUserRequest);
 
 module.exports = router;

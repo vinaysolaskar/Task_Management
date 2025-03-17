@@ -30,8 +30,8 @@ app.use('/api/task/update', taskUpdateLimiter);
 app.use('/api/task/delete', taskDeletionLimiter);
 app.use('/api/admin', adminOperationLimiter);
 
-app.use('/api/auth', logUserRequest, authRoutes);
-// app.use('/api/task', logTaskRequest, taskRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/task', taskRoutes);
 
 swaggerSetup(app);
 
