@@ -17,10 +17,9 @@ const {
 const cors = require('cors');
 const { logUserRequest, logTaskRequest } = require('./middleware/loggingMiddleware');
 
-app.use(cors());
-
 dotenv.config();
 app.use(express.json());
+app.use(cors({ origin: 'http://localhost:3000' })); // Allow requests from frontend
 
 app.use('/api/auth/register', registrationLimiter);
 app.use('/api/auth/login', loginLimiter);
