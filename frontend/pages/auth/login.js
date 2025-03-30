@@ -2,22 +2,33 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { loginUser } from '../../utils/api'; // Assuming you have this function
+import { loginUser } from '../../utils/api';
+import Toast from 'react-bootstrap/Toast'; // Import Bootstrap Toast
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', variant: '' }); // Toast state
   const router = useRouter();
+
+  const showToast = (message, variant = 'success') => {
+    setToast({ show: true, message, variant });
+    setTimeout(() => setToast({ show: false, message: '', variant: '' }), 3000); // Auto-hide after 3 seconds
+  };
 
   const handleLogin = async () => {
     try {
-        const response = await loginUser({ email, password });
-        localStorage.setItem('token', response.token); // Store the token in localStorage
-        router.push('/users'); // Redirect to the users page after login
+      const response = await loginUser({ email, password });
+      localStorage.setItem('token', response.token);
+      router.push('/users');
+      showToast('Login successful');
     } catch (err) {
-      setError(err);
-      console.error(err);
+      const message = err.response?.data?.message || err.message || 'An unexpected error occurred';
+      if (err.response?.status === 429) {
+        showToast('Too many requests. Please try again later.', 'warning');
+      } else {
+        showToast(message, 'danger');
+      }
     }
   };
 
@@ -25,7 +36,16 @@ const LoginPage = () => {
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
       <div className="card p-4 shadow-lg" style={{ maxWidth: '400px', width: '100%' }}>
         <h2 className="text-center mb-4">Login</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
+        {/* Toast Notification */}
+        <Toast
+          onClose={() => setToast({ show: false, message: '', variant: '' })}
+          show={toast.show}
+          delay={3000}
+          autohide
+          className={`bg-${toast.variant} text-white position-fixed top-0 end-0 m-3`}
+        >
+          <Toast.Body>{toast.message}</Toast.Body>
+        </Toast>
         <form onSubmit={(e) => e.preventDefault()}>
           <div className="mb-3">
             <input

@@ -5,7 +5,7 @@ const { logTaskRequest } = require('../middleware/loggingMiddleware');
 
 const createTask = retryMiddleware(async (req, res, next) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, startTask, endTask } = req.body;
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -13,8 +13,8 @@ const createTask = retryMiddleware(async (req, res, next) => {
       return res.status(401).json({ message: res.locals.response });
     }
 
-    if (!title || !description) {
-      res.locals.response = 'Title and description are required';
+    if (!title || !description || !endTask) {
+      res.locals.response = 'Title, description and End Time are required';
       return res.status(400).json({ message: res.locals.response });
     }
 
@@ -32,6 +32,10 @@ const createTask = retryMiddleware(async (req, res, next) => {
       }
     }
 
+    const startTaskDate = !startTask || startTask === "string" 
+      ? new Date() 
+      : new Date(startTask); // Use today's date if startTask is null or "string"
+
     const newTask = await prisma.task.create({
       data: {
         title,
@@ -39,6 +43,8 @@ const createTask = retryMiddleware(async (req, res, next) => {
         fileUrl,
         fileName,
         userId,
+        startTask: startTaskDate,
+        endTask: new Date(endTask),
       },
     });
 
@@ -62,7 +68,7 @@ const getTasks = retryMiddleware(async (req, res) => {
       return res.json({ message: res.locals.response });
     }
 
-    const { title, description, skip, take, sortBy = 'createdAt' } = req.query;
+    const { title, description, startTask, endTask, skip, take, sortBy = 'createdAt' } = req.query;
 
     const skipValue = isNaN(parseInt(skip)) ? 0 : parseInt(skip);
     const takeValue = isNaN(parseInt(take)) ? 10 : parseInt(take);
@@ -78,6 +84,8 @@ const getTasks = retryMiddleware(async (req, res) => {
         userId,
         title: { contains: title || '' },
         description: { contains: description || '' },
+        startTask: { gte: startTask ? new Date(startTask) : undefined },
+        endTask: { lte: endTask ? new Date(endTask) : undefined },
       },
       skip: skipValue,
       take: takeValue,
@@ -88,7 +96,15 @@ const getTasks = retryMiddleware(async (req, res) => {
       res.locals.response = 'No tasks found';
       return res.json({ message: res.locals.response });
     }
-    res.locals.response = tasks;
+
+    // Ensure startTask and endTask are returned in ISO format
+    const formattedTasks = tasks.map(task => ({
+      ...task,
+      startTask: task.startTask?.toISOString(),
+      endTask: task.endTask?.toISOString(),
+    }));
+
+    res.locals.response = formattedTasks;
     res.json({ message: res.locals.response });
   } catch (error) {
     console.error('Error fetching tasks:', error);
@@ -99,7 +115,7 @@ const getTasks = retryMiddleware(async (req, res) => {
 
 const updateTask = retryMiddleware(async (req, res, next) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, startTask, endTask, startDate, startTime, endDate, endTime } = req.body; // Include all fields
     const { id } = req.params;
     const userId = req.user?.userId;
 
@@ -137,11 +153,17 @@ const updateTask = retryMiddleware(async (req, res, next) => {
 
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
-      data: { title, description },
+      data: {
+        title,
+        description,
+        startTask: startTask ? new Date(startTask) : task.startTask, // Update startTask if provided
+        endTask: endTask ? new Date(endTask) : task.endTask,         // Update endTask if provided                         // Update endTime if provided
+      },
     });
+
     req.taskId = taskId; // Set taskId in request object
     res.locals.response = 'Task updated successfully';
-    res.json({ message: res.locals.response });
+    res.json({ message: res.locals.response, task: updatedTask });
     next(); // Call next() after setting taskId
   } catch (error) {
     console.error('Error updating task:', error);
@@ -213,7 +235,7 @@ const updateTaskStatus = retryMiddleware(async (req, res, next) => {
       return res.status(400).json({ message: 'Invalid task ID' });
     }
 
-    const validStatuses = ['pending', 'in-progress', 'completed'];
+    const validStatuses = ['pending', 'on-hold', 'completed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: `Invalid status. Valid options are: ${validStatuses.join(', ')}` });
     }

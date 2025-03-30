@@ -32,6 +32,13 @@ const router = express.Router();
  *               file:
  *                 type: string
  *                 format: binary
+ *               startTask:
+ *                 type: string
+ *                 format: date-time
+ *                 description: If null or "string", today's date will be used
+ *               endTask:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       201:
  *         description: Task created successfully

@@ -174,3 +174,25 @@ export const deleteTask = async (taskId) => {
     // throw error; // Re-throw the error for further handling
   }
 };
+
+export const updateTaskStatus = async (taskId, statusData) => {
+  if (!checkTokenValidity()) {
+    window.location.href = '/auth/login'; // Redirect to login if token is invalid
+    return;
+  }
+  try {
+    return await taskApi.put(`/updateTaskStatus/${taskId}`, statusData, {
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    if (error.response?.status === 401) {
+      console.error('Unauthorized: Please log in again.');
+      localStorage.removeItem('token'); // Clear the expired token
+      window.location.href = '/auth/login'; // Redirect to login page
+    }
+    throw error; // Re-throw the error for further handling
+  }
+};
