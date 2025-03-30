@@ -112,6 +112,7 @@ const updateTask = retryMiddleware(async (req, res, next) => {
 
     if (isNaN(taskId)) {
       res.locals.response = 'Invalid task ID';
+      console.log('Invalid task ID:', taskId);
       return res.status(400).json({ message: res.locals.response });
     }
 

@@ -13,15 +13,17 @@ const RegisterPage = () => {
 
   const handleRegister = async () => {
     try {
-      const response = await registerUser({ email, password, role });
+      if(email && password) {
+        const response = await registerUser({ email, password, role });
 
-      if (response.token) {
-        // Store token and redirect to the users page
-        localStorage.setItem('token', response.token);
-        router.push('/users');
-      }
+         if (response.token) {
+            // Store token and redirect to the users page
+            localStorage.setItem('token', response.token);
+          router.push('/users');
+        }
+      } 
     } catch (err) {
-      setError('Error during registration');
+      setError(err.message);
       console.error(err);
     }
   };

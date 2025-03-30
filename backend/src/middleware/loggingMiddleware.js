@@ -36,6 +36,7 @@ const logUserRequest = async (req, res, next) => {
 
 const logTaskRequest = async (req, res, next) => {
   const taskId = req.taskId || null;
+  const requestType = req.method;
 
   res.on('finish', async () => {
     const response = res.statusCode;

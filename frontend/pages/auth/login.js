@@ -12,11 +12,11 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await loginUser({ email, password });
-      localStorage.setItem('token', response.token); // Store the token in localStorage
-      router.push('/users'); // Redirect to the users page after login
+        const response = await loginUser({ email, password });
+        localStorage.setItem('token', response.token); // Store the token in localStorage
+        router.push('/users'); // Redirect to the users page after login
     } catch (err) {
-      setError('Error during login');
+      setError(err);
       console.error(err);
     }
   };
