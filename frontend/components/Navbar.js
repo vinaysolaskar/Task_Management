@@ -67,7 +67,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div className="container-fluid">
         <Link href="/" className="navbar-brand">Task Management</Link>
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -129,7 +129,9 @@ const Navbar = () => {
         delay={3000}
         autohide
         className={`bg-${toast.variant} text-white position-fixed top-0 end-0 m-3`}
+        style={{ zIndex: 2000 }} // Use a reasonable z-index
       >
+        {toast.show && console.log('Toast visible:', toast.message)}
         <Toast.Body>{toast.message}</Toast.Body>
       </Toast>
 

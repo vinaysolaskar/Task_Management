@@ -1,7 +1,7 @@
 const express = require('express');
 const { createTask, getTasks, updateTask, deleteTask, updateTaskStatus } = require('../controllers/taskController');
 const authenticate = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const { upload, uploadToDrive } = require('../middleware/uploadMiddleware');
 const {
   taskCreationLimiter,
   taskUpdateLimiter,
@@ -45,7 +45,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/create', authenticate, taskCreationLimiter, upload.single('file'), createTask, logTaskRequest);
+router.post('/create', authenticate, taskCreationLimiter, upload.single('file'), uploadToDrive, createTask, logTaskRequest);
 
 /**
  * @swagger

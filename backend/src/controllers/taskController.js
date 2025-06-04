@@ -21,6 +21,8 @@ const createTask = retryMiddleware(async (req, res, next) => {
     let fileUrl = null;
     let fileName = null;
 
+    // --- Old disk file handling code (commented out) ---
+    /*
     if (req.file) {
       const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
       if (!allowedTypes.includes(req.file.mimetype)) {
@@ -30,6 +32,14 @@ const createTask = retryMiddleware(async (req, res, next) => {
         fileUrl = req.file.path;
         fileName = req.file.filename;
       }
+    }
+    */
+    // --- End old code ---
+
+    // Use Google Drive upload result if available
+    if (req.fileUrl && req.fileName) {
+      fileUrl = req.fileUrl;
+      fileName = req.fileName;
     }
 
     const startTaskDate = !startTask || startTask === "string" 

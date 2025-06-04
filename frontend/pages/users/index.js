@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { fetchTasks, createTask, deleteTask, updateTask, updateTaskStatus } from '../../utils/api'; // Task-related functions
 import { useRouter } from 'next/router';
-import jwt from 'jsonwebtoken';
 import { withAuth } from '../../utils/authMiddleware'; // Import the middleware
-import { redirect } from 'next/dist/server/api-utils';
 import Modal from 'react-bootstrap/Modal'; // Import Bootstrap Modal
 import Button from 'react-bootstrap/Button'; // Import Bootstrap Button
 import Toast from 'react-bootstrap/Toast'; // Import Bootstrap Toast
@@ -24,9 +22,20 @@ const Tasks = () => {
         status: '',
     });
     const [editingStatusId, setEditingStatusId] = useState(null); // Track which task's status is being edited
+    // Toast state should be initially hidden
     const [toast, setToast] = useState({ show: false, message: '', variant: '' }); // Toast state
+    const [filters, setFilters] = useState({
+        title: '',
+        description: '',
+        startTask: '',
+        endTask: '',
+        sortBy: 'createdAt',
+        skip: 0,
+        take: 10,
+    }); // Filter and sort state
     const router = useRouter();
 
+    // Add a debug log when toast is shown
     const showToast = (message, variant = 'success') => {
         setToast({ show: true, message, variant });
         setTimeout(() => setToast({ show: false, message: '', variant: '' }), 3000); // Auto-hide after 3 seconds
@@ -64,10 +73,11 @@ const Tasks = () => {
     }, [router]);
 
     // Function to fetch tasks from the backend
-    const getTasks = async () => {
+    const getTasks = async (customFilters = filters) => {
         try {
-            const { data } = await fetchTasks();
+            const { data } = await fetchTasks(customFilters);
             // Ensure startTask and endTask are mapped correctly
+            console.log('Fetched tasks:', data.message); // Log the fetched tasks for debugging
             const formattedTasks = Array.isArray(data.message)
                 ? data.message.map(task => ({
                     ...task,
@@ -75,6 +85,7 @@ const Tasks = () => {
                     endDate: task.endTask,     // Map endTask to endDate
                 }))
                 : [];
+            console.log('Formatted tasks:', formattedTasks); // Log the formatted tasks
             setTasks(formattedTasks);
         } catch (err) {
             handleError(err);
@@ -103,8 +114,8 @@ const Tasks = () => {
         try {
             await createTask(formData); // Call the API to create the task
             setNewTask({ title: '', description: '', file: null, startDate: '', startTime: '', endDate: '', endTime: '', status: 'active' }); // Reset the form
-            getTasks(); // Re-fetch the tasks
             showToast('Task created successfully');
+            getTasks(); // Re-fetch the tasks
         } catch (err) {
             handleError(err);
         }
@@ -173,11 +184,53 @@ const Tasks = () => {
         }
     };
 
+    // Handle filter/sort form submit
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
+    const handleFilterSubmit = (e) => {
+        e.preventDefault();
+        getTasks({ ...filters, skip: 0 }); // Reset skip on new filter
+    };
+
     return (
         <div>
             <Navbar />
             <div className="container my-5">
                 <h1 className="text-center mb-4">Your Tasks</h1>
+
+                {/* Filter & Sort Form */}
+                <form className="mb-4" onSubmit={handleFilterSubmit}>
+                    <div className="row g-2">
+                        <div className="col-md-2">
+                            <input type="text" className="form-control" name="title" placeholder="Title" value={filters.title} onChange={handleFilterChange} />
+                        </div>
+                        <div className="col-md-2">
+                            <input type="text" className="form-control" name="description" placeholder="Description" value={filters.description} onChange={handleFilterChange} />
+                        </div>
+                        <div className="col-md-2">
+                            <input type="date" className="form-control" name="startTask" placeholder="Start Date" value={filters.startTask} onChange={handleFilterChange} />
+                        </div>
+                        <div className="col-md-2">
+                            <input type="date" className="form-control" name="endTask" placeholder="End Date" value={filters.endTask} onChange={handleFilterChange} />
+                        </div>
+                        <div className="col-md-2">
+                            <select className="form-control" name="sortBy" value={filters.sortBy} onChange={handleFilterChange}>
+                                <option value="createdAt">Sort by Created</option>
+                                <option value="updatedAt">Sort by Updated</option>
+                                <option value="title">Sort by Title</option>
+                                <option value="description">Sort by Description</option>
+                            </select>
+                        </div>
+                        <div className="col-md-1">
+                            <input type="number" className="form-control" name="take" min="1" max="100" value={filters.take} onChange={handleFilterChange} placeholder="Take" />
+                        </div>
+                        <div className="col-md-1">
+                            <button type="submit" className="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </div>
+                </form>
 
                 {/* Toast Notification */}
                 <Toast
@@ -186,6 +239,7 @@ const Tasks = () => {
                     delay={3000}
                     autohide
                     className={`bg-${toast.variant} text-white position-fixed top-0 end-0 m-3`}
+                    style={{ zIndex: 2000 }}
                 >
                     <Toast.Body>{toast.message}</Toast.Body>
                 </Toast>
@@ -281,6 +335,35 @@ const Tasks = () => {
                                     <p className="card-text">{task.description}</p>
                                     <p><strong>Start:</strong> {formatDateTime(task.startDate)}</p>
                                     <p><strong>End:</strong> {formatDateTime(task.endDate)}</p>
+                                    <p><strong>File Link:</strong> {task.fileUrl ? (() => {
+                                        // Extract fileId from fileUrl (uc?id=...)
+                                        const match = task.fileUrl.match(/id=([^&]+)/);
+                                        const fileId = match ? match[1] : null;
+                                        const viewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view` : task.fileUrl;
+                                        const downloadUrl = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : task.fileUrl;
+                                        return (
+                                            <>
+                                                <a
+                                                    href={viewUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="btn btn-outline-primary btn-sm mx-1"
+                                                >
+                                                    View
+                                                </a>
+                                                <a
+                                                    href={downloadUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="btn btn-outline-success btn-sm mx-1"
+                                                >
+                                                    Download
+                                                </a>
+                                            </>
+                                        );
+                                    })() : (
+                                        'No file attached'
+                                    )}</p>
                                     <p>
                                         <strong>Status: </strong>
                                         <select

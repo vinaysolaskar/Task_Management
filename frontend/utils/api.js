@@ -83,7 +83,7 @@ export const getAuthHeader = () => {
   return { Authorization: `Bearer ${token}` };
 };
 
-export const fetchTasks = async () => {
+export const fetchTasks = async (filters = {}) => {
   if (!checkTokenValidity()) {
     window.location.href = '/auth/login'; // Redirect to login if token is invalid
     return;
@@ -91,6 +91,7 @@ export const fetchTasks = async () => {
   try {
     return await taskApi.get('/getTasks', {
       headers: getAuthHeader(),
+      params: filters, // Pass filters as query params
     });
   } catch (error) {
     if (error.response?.status === 401) {
