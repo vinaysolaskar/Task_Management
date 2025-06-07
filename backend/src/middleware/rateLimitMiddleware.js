@@ -13,8 +13,8 @@ const loginLimiter = rateLimit({
 });
 
 const taskCreationLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, 
-  max: 100, 
+  windowMs: 1 * 60 * 60 * 1000, 
+  max: 10, 
   message: 'Too many task creation attempts, please try again after 24 hours',
 });
 
@@ -32,7 +32,7 @@ const taskDeletionLimiter = rateLimit({
 
 const adminOperationLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, 
-  max: 100, 
+  max: 10, 
   message: 'Too many admin operations, please try again after 1 minute',
 });
 

@@ -8,10 +8,10 @@ const createTask = retryMiddleware(async (req, res, next) => {
     const { title, description, startTask, endTask } = req.body;
     const userId = req.user?.userId;
 
-    if (!userId) {
-      res.locals.response = 'User not authenticated';
-      return res.status(401).json({ message: res.locals.response });
-    }
+    // if (!userId) {
+    //   res.locals.response = 'User not authenticated';
+    //   return res.status(401).json({ message: res.locals.response });
+    // }
 
     if (!title || !description || !endTask) {
       res.locals.response = 'Title, description and End Time are required';
@@ -73,10 +73,10 @@ const getTasks = retryMiddleware(async (req, res) => {
   try {
     const userId = req.user?.userId;
 
-    if (!userId) {
-      res.locals.response = 'User not authenticated';
-      return res.json({ message: res.locals.response });
-    }
+    // if (!userId) {
+    //   res.locals.response = 'User not authenticated';
+    //   return res.json({ message: res.locals.response });
+    // }
 
     const { title, description, startTask, endTask, skip, take, sortBy = 'createdAt' } = req.query;
 

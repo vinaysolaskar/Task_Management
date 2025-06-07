@@ -165,6 +165,14 @@ const deleteMultipleUsers = retryMiddleware(async (req, res, next) => {
       where: { id: { in: userIds } },
     });
 
+    // Check for missing users
+    const foundUserIds = usersToDelete.map(u => u.id);
+    const missingUserId = userIds.find(id => !foundUserIds.includes(id));
+    if (missingUserId) {
+      res.locals.response = `User with ID ${missingUserId} not found.`;
+      return res.status(404).json({ message: res.locals.response });
+    }
+
     const adminCount = await prisma.user.count({ where: { role: 'admin' } });
     const usersToDeleteWithRole = usersToDelete.filter(user => user.role === 'admin');
     if (adminCount - usersToDeleteWithRole.length < 1) {
@@ -175,12 +183,12 @@ const deleteMultipleUsers = retryMiddleware(async (req, res, next) => {
     await prisma.user.deleteMany({
       where: { id: { in: userIds } },
     });
-    res.locals.response = 'Users deleted successfully.'; // Add this line
+    res.locals.response = 'Users deleted successfully.';
     res.status(200).json({ message: res.locals.response });
     next();
   } catch (error) {
     console.error('Error deleting multiple users:', error);
-    res.locals.response = `message: 'Server error.', error: ${error.message}`; // Add this line
+    res.locals.response = `message: 'Server error.', error: ${error.message}`;
     res.status(500).json(res.locals.response);
   }
 });
