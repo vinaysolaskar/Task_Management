@@ -15,7 +15,7 @@ const {
   adminOperationLimiter
 } = require('./middleware/rateLimitMiddleware');
 const cors = require('cors');
-const { logUserRequest, logTaskRequest } = require('./middleware/loggingMiddleware');
+require('./middleware/jobMiddleware');
 
 dotenv.config();
 app.use(express.json());
