@@ -6,6 +6,7 @@ import { withAuth } from '../../utils/authMiddleware'; // Import the middleware
 import Modal from 'react-bootstrap/Modal'; // Import Bootstrap Modal
 import Button from 'react-bootstrap/Button'; // Import Bootstrap Button
 import Toast from 'react-bootstrap/Toast'; // Import Bootstrap Toast
+import UserV2Page from '../user_v2';
 
 const Tasks = () => {
     const [tasks, setTasks] = useState([]);  // Store the tasks
@@ -456,4 +457,4 @@ const Tasks = () => {
     );
 };
 
-export default withAuth(Tasks); // Wrap the component with the middleware
+export default UserV2Page;
