@@ -78,36 +78,39 @@ const getTasks = retryMiddleware(async (req, res) => {
     //   return res.json({ message: res.locals.response });
     // }
 
-    const { title, description, startTask, endTask, skip, take, sortBy = 'createdAt' } = req.query;
+    const { title, description, startTask, endTask, skip, take, sortBy = 'createdAt', status } = req.query;
 
     const skipValue = isNaN(parseInt(skip)) ? 0 : parseInt(skip);
     const takeValue = isNaN(parseInt(take)) ? 10 : parseInt(take);
 
-    const validSortFields = ['title', 'description', 'createdAt', 'updatedAt'];
+    const validSortFields = ['title', 'description', 'createdAt', 'updatedAt', 'startTask', 'endTask'];
     if (!validSortFields.includes(sortBy)) {
       res.locals.response = `Invalid sort field. Valid options are: ${validSortFields.join(', ')}`;
       return res.json({ message: res.locals.response });
     }
 
+    // Build filter for both findMany and count
+    const filter = {
+      userId,
+      title: { contains: title || '' },
+      description: { contains: description || '' },
+      startTask: { gte: startTask ? new Date(startTask) : undefined },
+      endTask: { lte: endTask ? new Date(endTask) : undefined },
+      ...(status && status !== 'all' ? { status } : {}),
+    };
+
+    // Get total count for pagination
+    const total = await prisma.task.count({ where: filter });
+
+    // Get paginated tasks
     const tasks = await prisma.task.findMany({
-      where: {
-        userId,
-        title: { contains: title || '' },
-        description: { contains: description || '' },
-        startTask: { gte: startTask ? new Date(startTask) : undefined },
-        endTask: { lte: endTask ? new Date(endTask) : undefined },
-      },
+      where: filter,
       skip: skipValue,
       take: takeValue,
       orderBy: { [sortBy]: 'desc' },
     });
 
-    if (tasks.length === 0) {
-      res.locals.response = 'No tasks found';
-      return res.json({ message: res.locals.response });
-    }
-
-    // Ensure startTask and endTask are returned in ISO format
+    // Always return an array for message, even if empty
     const formattedTasks = tasks.map(task => ({
       ...task,
       startTask: task.startTask?.toISOString(),
@@ -115,7 +118,7 @@ const getTasks = retryMiddleware(async (req, res) => {
     }));
 
     res.locals.response = formattedTasks;
-    res.json({ message: res.locals.response });
+    res.json({ message: formattedTasks, total });
   } catch (error) {
     console.error('Error fetching tasks:', error);
     res.locals.response = 'Error fetching tasks';

@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
+import TaskForm from '../components/TaskForm';
+import FilterBar from '../components/FilterBar';
+import TaskCard from '../components/TaskCard';
 import { fetchTasks, createTask, deleteTask, updateTask, updateTaskStatus } from '../utils/api';
 import Toast from 'react-bootstrap/Toast';
 import Modal from 'react-bootstrap/Modal';
@@ -21,12 +24,13 @@ export default function UserV2Page() {
     const [analyticsView, setAnalyticsView] = useState('chart'); // 'chart', 'recent', 'trends', 'deadlines'
     const [taskFilter, setTaskFilter] = useState('all'); // 'all', 'pending', 'completed', 'on-hold'
 
-    const filteredTasks = taskFilter === 'all' ? tasks : tasks.filter(t => {
-        if (taskFilter === 'pending') return t.status === 'pending';
-        if (taskFilter === 'completed') return t.status === 'completed';
-        if (taskFilter === 'on-hold') return t.status === 'on-hold';
-        return true;
-    });
+    // New state for search, sort, and pagination
+    const [search, setSearch] = useState('');
+    const [sortBy, setSortBy] = useState('createdAt');
+    const [sortOrder, setSortOrder] = useState('desc');
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(8); // 8 tasks per page
+    const [totalTasks, setTotalTasks] = useState(0);
 
     const showToast = (message, variant = 'success') => {
         setToast({ show: true, message, variant });
@@ -58,15 +62,24 @@ export default function UserV2Page() {
             getTasks();
         }
         // eslint-disable-next-line
-    }, []);
+    }, [search, sortBy, sortOrder, page, taskFilter]);
 
-    const getTasks = async () => {
+    const getTasks = async (customPage = page) => {
         try {
-            const { data } = await fetchTasks();
+            const filters = {
+                title: search,
+                sortBy,
+                sortOrder,
+                skip: (customPage - 1) * pageSize,
+                take: pageSize,
+                status: taskFilter,
+            };
+            const { data } = await fetchTasks(filters);
             const formattedTasks = Array.isArray(data.message)
                 ? data.message.map(task => ({ ...task, startDate: task.startTask, endDate: task.endTask }))
                 : [];
             setTasks(formattedTasks);
+            setTotalTasks(data.total || 0);
         } catch (err) {
             handleError(err);
         }
@@ -161,33 +174,49 @@ export default function UserV2Page() {
         date: formatDateTime(task.endDate || task.updatedAt || task.createdAt),
     }));
 
+    // Add or update the handlePageChange function if not present
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= Math.ceil(totalTasks / pageSize)) setPage(newPage);
+    };
+
+    // Render
     return (
         <div style={{ minHeight: '100vh', background: '#f7f7f7', overflow: 'hidden', position: 'relative' }}>
             <Navbar />
             <div style={{ marginTop: 120, paddingLeft: 32, paddingRight: 32, height: 'calc(100vh - 120px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+                {/* Search, Sort, and FilterBar Row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Search tasks by title..."
+                        style={{ maxWidth: 260 }}
+                        value={search}
+                        onChange={e => { setSearch(e.target.value); setPage(1); }}
+                    />
+                    <select className="form-control" style={{ maxWidth: 160 }} value={sortBy} onChange={e => { setSortBy(e.target.value); setPage(1); }}>
+                        <option value="createdAt">Sort by Created</option>
+                        <option value="startTask">Sort by Start Date</option>
+                        <option value="endTask">Sort by End Date</option>
+                        <option value="title">Sort by Title</option>
+                    </select>
+                    <div style={{ flex: 1 }} />
+                    <FilterBar taskFilter={taskFilter} setTaskFilter={setTaskFilter} />
+                </div>
                 <div style={{ display: 'flex', height: '32%', minHeight: 180, gap: 32, flexShrink: 0 }}>
-                    <div style={{ flex: 1, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', border: formOpen ? '2px solid #007bff' : '1px solid #ccc' }} onClick={() => setFormOpen(true)}>
-                        {!formOpen && (
-                            <div style={{ textAlign: 'center', opacity: 0.7 }}>
-                                <h3 style={{ marginBottom: 8 }}>Create New Task</h3>
-                                <p style={{ fontSize: 16 }}>Click to add a new task</p>
-                            </div>
-                        )}
-                    </div>
+                    <TaskForm
+                        formOpen={formOpen}
+                        setFormOpen={setFormOpen}
+                        newTask={newTask}
+                        setNewTask={setNewTask}
+                        handleCreateTask={handleCreateTask}
+                    />
                     <div style={{ flex: 1, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
                         <h2 style={{ marginBottom: 16 }}>Analytics & Quick Actions</h2>
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                             <button className="btn btn-outline-primary btn-sm" onClick={() => { setAnalyticsOpen(true); setAnalyticsView('chart'); }}>See Chart for Task Status</button>
                             <button className="btn btn-outline-secondary btn-sm" onClick={() => { setAnalyticsOpen(true); setAnalyticsView('recent'); }}>Recent Activity</button>
                             <button className="btn btn-outline-warning btn-sm" onClick={() => { setAnalyticsOpen(true); setAnalyticsView('deadlines'); }}>Upcoming Deadlines</button>
-                        </div>
-                        <div>
-                            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-                                <button className="btn btn-outline-primary btn-sm" onClick={() => setTaskFilter('all')}>Show All</button>
-                                <button className="btn btn-outline-primary btn-sm" onClick={() => setTaskFilter('pending')}>Show Active</button>
-                                <button className="btn btn-outline-success btn-sm" onClick={() => setTaskFilter('completed')}>Show Completed</button>
-                                <button className="btn btn-outline-warning btn-sm" onClick={() => setTaskFilter('on-hold')}>Show On Hold</button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -196,41 +225,39 @@ export default function UserV2Page() {
                     {tasks.length === 0 ? (
                         <p>No tasks found.</p>
                     ) : (
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: 20,
-                        }}>
-                            {filteredTasks.map((task, idx) => (
-                                <div className={`card my-2 shadow-sm task-filter-${task.status}`} key={task.id} style={{ marginBottom: 0 }}>
-                                    <div className="card-body">
-                                        <h5 className="card-title">{task.title}</h5>
-                                        <p className="card-text">{task.description}</p>
-                                        <p><strong>Start:</strong> {formatDateTime(task.startDate)}</p>
-                                        <p><strong>End:</strong> {formatDateTime(task.endDate)}</p>
-                                        <p><strong>File Link:</strong> {task.fileUrl ? (() => {
-                                            const match = task.fileUrl.match(/id=([^&]+)/);
-                                            const fileId = match ? match[1] : null;
-                                            const viewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view` : task.fileUrl;
-                                            const downloadUrl = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : task.fileUrl;
-                                            return (<>
-                                                <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-sm mx-1">View</a>
-                                                <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-success btn-sm mx-1">Download</a>
-                                            </>);
-                                        })() : ('No file attached')}</p>
-                                        <p>
-                                            <strong>Status: </strong>
-                                            <select className="form-control d-inline w-auto ml-2" value={task.status} onChange={e => handleUpdateTaskStatus(task.id, e.target.value)}>
-                                                <option value="pending">Active</option>
-                                                <option value="completed">Completed</option>
-                                                <option value="on-hold">On Hold</option>
-                                            </select>
-                                        </p>
-                                        <button className="btn btn-info" onClick={() => handleEditTask(task)}>Edit</button>
-                                        <button className="btn btn-danger ml-2" onClick={() => handleDeleteTask(task.id)}>Delete</button>
-                                    </div>
-                                </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                            {tasks.map((task, idx) => (
+                                <TaskCard
+                                    key={task.id}
+                                    task={task}
+                                    formatDateTime={formatDateTime}
+                                    handleEditTask={handleEditTask}
+                                    handleDeleteTask={handleDeleteTask}
+                                    handleUpdateTaskStatus={handleUpdateTaskStatus}
+                                />
                             ))}
+                        </div>
+                    )}
+                    {/* Pagination Controls - always show if more than one page */}
+                    {Math.ceil(totalTasks / pageSize) > 0 && (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 24, justifyContent: 'center', fontWeight: 500 }}>
+                            <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => handlePageChange(page - 1)}
+                                disabled={page === 1}
+                            >
+                                &laquo; Prev
+                            </button>
+                            <span style={{ minWidth: 80, textAlign: 'center' }}>
+                                Page {page} of {Math.ceil(totalTasks / pageSize)}
+                            </span>
+                            <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => handlePageChange(page + 1)}
+                                disabled={page === Math.ceil(totalTasks / pageSize) || totalTasks === 0}
+                            >
+                                Next &raquo;
+                            </button>
                         </div>
                     )}
                 </div>
@@ -357,84 +384,6 @@ export default function UserV2Page() {
                     </div>
                 )}
             </div>
-            {/* Overlay Task Form Modal */}
-            {formOpen && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    width: '100vw',
-                    height: '100vh',
-                    background: 'rgba(0,0,0,0.2)',
-                    zIndex: 3000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-                    onClick={() => setFormOpen(false)}
-                >
-                    <div
-                        style={{
-                            background: '#fff',
-                            borderRadius: 16,
-                            minWidth: 400,
-                            maxWidth: 500,
-                            width: '90%',
-                            minHeight: 300,
-                            boxShadow: '0 4px 24px #0002',
-                            padding: 32,
-                            position: 'relative',
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            style={{
-                                position: 'absolute',
-                                top: 2,
-                                right: 5,
-                                background: 'none',
-                                border: 'none',
-                                fontSize: 22,
-                                cursor: 'pointer',
-                            }}
-                            onClick={() => setFormOpen(false)}
-                            aria-label="Close"
-                        >
-                            ×
-                        </button>
-                        <form onSubmit={handleCreateTask}>
-                            <div className="mb-3">
-                                <input type="text" className="form-control" id="title" placeholder="Task Title" value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })} required />
-                            </div>
-                            <div className="mb-3">
-                                <textarea className="form-control" id="description" placeholder="Task Description" value={newTask.description} onChange={e => setNewTask({ ...newTask, description: e.target.value })} required></textarea>
-                            </div>
-                            <div className="mb-3">
-                                <input type="file" className="form-control" id="file" onChange={e => setNewTask({ ...newTask, file: e.target.files[0] })} />
-                            </div>
-                            <div className="mb-3">
-                                <label>Start Date</label>
-                                <input type="date" className="form-control" value={newTask.startDate} onChange={e => setNewTask({ ...newTask, startDate: e.target.value })} />
-                                <label>Start Time</label>
-                                <input type="time" className="form-control" value={newTask.startTime} onChange={e => setNewTask({ ...newTask, startTime: e.target.value })} />
-                            </div>
-                            <div className="mb-3">
-                                <label>End Date</label>
-                                <input type="date" className="form-control" value={newTask.endDate} onChange={e => setNewTask({ ...newTask, endDate: e.target.value })} />
-                                <label>End Time</label>
-                                <input type="time" className="form-control" value={newTask.endTime} onChange={e => setNewTask({ ...newTask, endTime: e.target.value })} />
-                            </div>
-                            <div className="mb-3">
-                                <label>Status</label>
-                                <select className="form-control" value="active" disabled>
-                                    <option value="active">Active</option>
-                                </select>
-                            </div>
-                            <button type="submit" className="btn btn-primary w-100">Create Task</button>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

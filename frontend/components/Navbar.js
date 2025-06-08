@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { Modal } from 'react-bootstrap'; // Import Bootstrap Modal for the popup
 import Toast from 'react-bootstrap/Toast'; // Import Bootstrap Toast
 import { deleteUser, deleteMultipleUsers } from '../utils/api'; // Import the API functions
+import { FaPowerOff, FaUserCog, FaUsers, FaTrashAlt, FaUserMinus, FaUserFriends } from 'react-icons/fa';
+import Dropdown from 'react-bootstrap/Dropdown';
 
 const Navbar = () => {
   const router = useRouter();
@@ -14,6 +16,7 @@ const Navbar = () => {
   const [showModal, setShowModal] = useState(false);
   const [userIds, setUserIds] = useState(""); // Store the user IDs to be deleted
   const [singleUserId, setSingleUserId] = useState(""); // Store the single user ID to be deleted
+  const [deleteMode, setDeleteMode] = useState(null); // 'single' | 'multiple' | null
 
   useEffect(() => {
     setIsClient(true); // Ensure client-only logic runs after hydration
@@ -86,34 +89,30 @@ const Navbar = () => {
               </>
             ) : (
               <>
+                {/* Users Dropdown using React-Bootstrap */}
+                <Dropdown align="end" as="li" className="nav-item">
+                  <Dropdown.Toggle as="a" className="nav-link text-light d-flex align-items-center p-0 mt-2" id="usersDropdown" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+                    <FaUsers className="me-1" /> Users
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item as={Link} href="/users">
+                      <FaUsers className="me-2" />View Users
+                    </Dropdown.Item>
+                    {isAdmin && (
+                      <>
+                        <Dropdown.Item onClick={() => { setShowModal(true); setDeleteMode('single'); }}>
+                          <FaUserMinus className="me-2" />Delete Single User
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => { setShowModal(true); setDeleteMode('multiple'); }}>
+                          <FaUserFriends className="me-2" />Delete Multiple Users
+                        </Dropdown.Item>
+                      </>
+                    )}
+                  </Dropdown.Menu>
+                </Dropdown>
                 <li className="nav-item">
-                  <Link href="/users" className="nav-link">Users</Link>
-                </li>
-                {isAdmin && (
-                  <>
-                    <li className="nav-item">
-                      <button onClick={() => setShowModal(true)} className="nav-link btn btn-link text-light">
-                        Delete Users
-                      </button>
-                    </li>
-                    {/* Add option to delete a single user */}
-                    <li className="nav-item">
-                      <input
-                        type="text"
-                        placeholder="User ID"
-                        value={singleUserId}
-                        onChange={(e) => setSingleUserId(e.target.value)}
-                        className="form-control"
-                      />
-                      <button onClick={handleDeleteSingleUser} className="btn btn-danger mt-2">
-                        Delete Single User
-                      </button>
-                    </li>
-                  </>
-                )}
-                <li className="nav-item">
-                  <button onClick={handleLogout} className="nav-link btn btn-link text-light">
-                    Logout
+                  <button onClick={handleLogout} className="nav-link btn btn-link text-light d-flex align-items-center">
+                    <FaPowerOff className="me-1" style={{ fontSize: 18 }} /> Logout
                   </button>
                 </li>
               </>
@@ -135,26 +134,47 @@ const Navbar = () => {
         <Toast.Body>{toast.message}</Toast.Body>
       </Toast>
 
-      {/* Modal for deleting multiple users */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      {/* Modal for deleting users (single or multiple) */}
+      <Modal show={showModal} onHide={() => { setShowModal(false); setDeleteMode(null); }}>
         <Modal.Header closeButton>
-          <Modal.Title>Delete Users</Modal.Title>
+          <Modal.Title>{deleteMode === 'single' ? 'Delete Single User' : 'Delete Multiple Users'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div>
-            <label>Enter User IDs to Delete (comma separated):</label>
-            <input
-              type="text"
-              className="form-control"
-              value={userIds}
-              onChange={(e) => setUserIds(e.target.value)}
-              placeholder="e.g. 1,2,3"
-            />
-          </div>
+          {deleteMode === 'single' ? (
+            <div>
+              <label>Enter User ID to Delete:</label>
+              <input
+                type="text"
+                className="form-control mt-2"
+                value={singleUserId}
+                onChange={(e) => setSingleUserId(e.target.value)}
+                placeholder="e.g. 123"
+              />
+            </div>
+          ) : deleteMode === 'multiple' ? (
+            <div>
+              <label>Enter User IDs to Delete (comma separated):</label>
+              <input
+                type="text"
+                className="form-control mt-2"
+                value={userIds}
+                onChange={(e) => setUserIds(e.target.value)}
+                placeholder="e.g. 1,2,3"
+              />
+            </div>
+          ) : null}
         </Modal.Body>
         <Modal.Footer>
-          <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-          <button className="btn btn-danger" onClick={handleDeleteMultipleUsers}>Delete</button>
+          <button className="btn btn-secondary" onClick={() => { setShowModal(false); setDeleteMode(null); }}>Cancel</button>
+          {deleteMode === 'single' ? (
+            <button className="btn btn-danger" onClick={handleDeleteSingleUser}>
+              <FaTrashAlt className="me-2" />Delete User
+            </button>
+          ) : deleteMode === 'multiple' ? (
+            <button className="btn btn-danger" onClick={handleDeleteMultipleUsers}>
+              <FaTrashAlt className="me-2" />Delete Users
+            </button>
+          ) : null}
         </Modal.Footer>
       </Modal>
     </nav>
