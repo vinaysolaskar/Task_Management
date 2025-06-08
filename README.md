@@ -1,4 +1,4 @@
-# Task Management v2
+# Task Management
 
 A full-stack Task Management application with a Next.js frontend and a Node.js/Express backend. Features include user authentication, task CRUD, file uploads (with Google Drive integration), rate limiting, logging, and scheduled background jobs.
 
@@ -8,10 +8,10 @@ A full-stack Task Management application with a Next.js frontend and a Node.js/E
 
 - **User Authentication**: Register, login, and role-based access (admin/user)
 - **Task Management**: Create, read, update, delete tasks
-- **File Uploads**: Attach files to tasks, uploaded to Google Drive
+- **File Uploads**: Attach files to tasks, upload it to Google Drive
 - **Rate Limiting**: Prevent abuse on sensitive endpoints
 - **Logging**: Request and task logging for audit and debugging
-- **Scheduled Jobs**: Automatic cleanup of old tasks every 10 seconds (for demo)
+- **Scheduled Jobs**: Automatic cleanup of old tasks every week (Sunday Midnight)
 - **API Documentation**: Swagger UI available
 - **Frontend**: Built with Next.js, includes authentication and user/task management UI
 
