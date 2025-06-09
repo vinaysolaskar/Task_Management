@@ -1,9 +1,10 @@
-import { CronJob } from 'cron';
-import { PrismaClient } from '@prisma/client';
+const { CronJob } = require('cron');
+const { PrismaClient } = require('@prisma/client');
+const { deleteFileFromDrive } = require('../utils/googleDrive');
 const prisma = new PrismaClient();
 
-// Runs every 10 seconds
-const job = new CronJob('0 0 * * * 7', () => {
+// Runs every Sunday at midnight
+const job = new CronJob('0 0 * * 7', () => {
     console.log('Weekly:: Running weekly cleanup job at', new Date().toISOString());
     (async () => {
         try {
@@ -15,7 +16,8 @@ const job = new CronJob('0 0 * * * 7', () => {
                 }
             });
             for (const task of findTasksToDelete) {
-                const logTasksToDelete = await prisma.taskLog.create({
+                // Log the task
+                await prisma.taskLog.create({
                     data: {
                         taskId: task.id,
                         requestType: 'DELETE',
@@ -23,16 +25,21 @@ const job = new CronJob('0 0 * * * 7', () => {
                         responseBody: JSON.stringify(task)
                     }
                 });
+                // Delete file from Google Drive if fileId exists
+                if (task.fileUrl && task.fileUrl.includes('id=')) {
+                    const fileId = task.fileUrl.split('id=')[1].split('&')[0];
+                    await deleteFileFromDrive(fileId);
+                }
             }
+            // Delete tasks from DB
             const result = await prisma.task.deleteMany({
                 where: {
                     endTask: {
-                        lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) 
+                        lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                     }
                 }
             });
             console.log(`Deleted ${result.count} old tasks`);
-                
         } catch (error) {
             console.error('Weekly:: Error deleting old tasks:', error);
         }

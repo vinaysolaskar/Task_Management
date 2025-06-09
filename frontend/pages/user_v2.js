@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import TaskForm from '../components/TaskForm';
 import FilterBar from '../components/FilterBar';
@@ -41,6 +41,14 @@ export default function UserV2Page() {
         const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
         if (error.response?.status === 429) {
             showToast('Too many requests. Please try again later.', 'warning');
+        } else if (
+            error.response?.status === 401 ||
+            error.response?.status === 403 ||
+            (error.response?.status === 404 && message.toLowerCase().includes('user'))
+        ) {
+            // User is unauthorized or deleted, log out
+            localStorage.removeItem('token');
+            window.location.href = '/auth/login';
         } else {
             showToast(message, 'danger');
         }
@@ -54,6 +62,17 @@ export default function UserV2Page() {
         return new Intl.DateTimeFormat('en-US', options).format(date);
     };
 
+    // Debounce for search/filter/sort/page
+    const debounceTimeout = useRef();
+    useEffect(() => {
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+        debounceTimeout.current = setTimeout(() => {
+            getTasks();
+        }, 400); // 400ms debounce
+        return () => clearTimeout(debounceTimeout.current);
+        // eslint-disable-next-line
+    }, [search, sortBy, sortOrder, page, taskFilter]);
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -62,7 +81,7 @@ export default function UserV2Page() {
             getTasks();
         }
         // eslint-disable-next-line
-    }, [search, sortBy, sortOrder, page, taskFilter]);
+    }, []);
 
     const getTasks = async (customPage = page) => {
         try {
@@ -225,7 +244,14 @@ export default function UserV2Page() {
                     {tasks.length === 0 ? (
                         <p>No tasks found.</p>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: 20,
+                                ...(window.innerWidth < 700 ? { gridTemplateColumns: '1fr' } : {})
+                            }}
+                        >
                             {tasks.map((task, idx) => (
                                 <TaskCard
                                     key={task.id}

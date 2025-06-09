@@ -1,6 +1,6 @@
 # Task Management
 
-A full-stack Task Management application with a Next.js frontend and a Node.js/Express backend. Features include user authentication, task CRUD, file uploads (with Google Drive integration), rate limiting, logging, and scheduled background jobs.
+A full-stack Task Management application with a Next.js frontend and a Node.js/Express backend. Features include user authentication, task CRUD, file uploads (with Google Drive integration), rate limiting, logging, scheduled background jobs, and robust user/session security.
 
 ---
 
@@ -8,12 +8,16 @@ A full-stack Task Management application with a Next.js frontend and a Node.js/E
 
 - **User Authentication**: Register, login, and role-based access (admin/user)
 - **Task Management**: Create, read, update, delete tasks
-- **File Uploads**: Attach files to tasks, upload it to Google Drive
+- **File Uploads**: Attach files to tasks, upload to Google Drive
+- **Automatic File Cleanup**: Files in Google Drive are deleted when their associated tasks are deleted (including via scheduled cleanup)
 - **Rate Limiting**: Prevent abuse on sensitive endpoints
 - **Logging**: Request and task logging for audit and debugging
-- **Scheduled Jobs**: Automatic cleanup of old tasks every week (Sunday Midnight)
+- **Scheduled Jobs**: Automatic cleanup of old tasks and their files every week (Sunday Midnight)
+- **Immediate User Logout**: If a user is deleted by an admin, they are logged out on their next action or refresh
 - **API Documentation**: Swagger UI available
 - **Frontend**: Built with Next.js, includes authentication and user/task management UI
+- **Debounced Search & Filters**: Prevents excessive API calls
+- **Responsive UI**: Works well on small screens
 
 ---
 
@@ -87,7 +91,8 @@ frontend/
 - Create, update, and delete tasks.
 - Attach files to tasks (files are uploaded to Google Drive).
 - Admin users can delete multiple users.
-- Old tasks are automatically deleted by a background job.
+- Old tasks and their files are automatically deleted by a background job.
+- If a user is deleted by an admin, they are logged out immediately on their next action.
 
 ---
 
