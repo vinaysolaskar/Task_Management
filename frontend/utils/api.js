@@ -2,11 +2,11 @@ import axios from 'axios';
 import { checkTokenValidity } from './authMiddleware';
 
 const authApi = axios.create({
-  baseURL: 'http://localhost:5000/api/auth',
+  baseURL: process.env.NEXT_PUBLIC_API_AUTH_URL,
 });
 
 const taskApi = axios.create({
-  baseURL: 'http://localhost:5000/api/task',
+  baseURL: process.env.NEXT_PUBLIC_API_TASK_URL,
 });
 
 // Register user
