@@ -15,11 +15,12 @@ const {
   adminOperationLimiter
 } = require('./middleware/rateLimitMiddleware');
 const cors = require('cors');
+require('dotenv').config();
 require('./middleware/jobMiddleware');
 
 dotenv.config();
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3000' })); // Allow requests from frontend
+app.use(cors({ origin: `${process.env.FRONTEND_URL}` })); // Allow requests from frontend
 
 app.use('/api/auth/register', registrationLimiter);
 app.use('/api/auth/login', loginLimiter);
