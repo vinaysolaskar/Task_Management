@@ -21,13 +21,9 @@ require('./middleware/jobMiddleware');
 dotenv.config();
 app.use(express.json());
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_PROD
-].filter(Boolean);
-
+// DEBUG: Allow all origins for CORS (for troubleshooting only)
 app.use(cors({
-  origin: allowedOrigins,
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -35,7 +31,7 @@ app.use(cors({
 
 // Handle preflight requests for all routes
 app.options('*', cors({
-  origin: allowedOrigins,
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

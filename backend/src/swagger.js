@@ -1,6 +1,8 @@
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+const swaggerServerUrl = process.env.SWAGGER_SERVER_URL || 'http://localhost:5000';
+
 const options = {
   swaggerDefinition: {
     openapi: '3.0.0',
@@ -10,9 +12,7 @@ const options = {
       description: 'API documentation for Task Manager',
     },
     servers: [
-      {
-        url: 'http://localhost:5000',
-      },
+      { url: swaggerServerUrl },
     ],
     components: {
       securitySchemes: {
@@ -24,9 +24,7 @@ const options = {
       },
     },
     security: [
-      {
-        bearerAuth: [],
-      },
+      { bearerAuth: [] },
     ],
   },
   apis: ['./src/routes/*.js'],
