@@ -21,13 +21,20 @@ require('./middleware/jobMiddleware');
 dotenv.config();
 app.use(express.json());
 
-// Allow both local and production frontend URLs from environment variables
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_PROD
 ].filter(Boolean);
 
 app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Handle preflight requests for all routes
+app.options('*', cors({
   origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
