@@ -20,7 +20,19 @@ require('./middleware/jobMiddleware');
 
 dotenv.config();
 app.use(express.json());
-app.use(cors({ origin: `${process.env.FRONTEND_URL}` })); // Allow requests from frontend
+
+// Allow both local and production frontend URLs from environment variables
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_PROD
+].filter(Boolean);
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use('/api/auth/register', registrationLimiter);
 app.use('/api/auth/login', loginLimiter);
