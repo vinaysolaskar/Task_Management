@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'aquasec/trivy:latest'
+            args '-u root:root'
+        }
+    }
 
     stages {
 
@@ -9,16 +14,16 @@ pipeline {
             }
         }
 
-        stage('Install Trivy') {
-            steps {
-                sh '''
-                apt-get update
-                apt-get install -y wget
-                wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.48.3_Linux-64bit.deb
-                dpkg -i trivy_0.48.3_Linux-64bit.deb
-                '''
-            }
-        }
+        // stage('Install Trivy') {
+        //     steps {
+        //         sh '''
+        //         apt-get update
+        //         apt-get install -y wget
+        //         wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.48.3_Linux-64bit.deb
+        //         dpkg -i trivy_0.48.3_Linux-64bit.deb
+        //         '''
+        //     }
+        // }
 
         stage('Terraform Security Scan') {
             steps {
