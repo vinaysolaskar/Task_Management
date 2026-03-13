@@ -5,7 +5,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/vinaysolaskar/Task_Management'
+                git 'https://github.com/vinaysolaskar/Task_Management/tree/main/backend'
             }
         }
 
