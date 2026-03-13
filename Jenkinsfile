@@ -12,39 +12,36 @@ pipeline {
         stage('Install Trivy') {
             steps {
                 sh '''
-                sudo apt-get update
+                apt-get update
                 apt-get install -y wget
-                sudo wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.48.3_Linux-64bit.deb
-                sudo dpkg -i trivy_0.48.3_Linux-64bit.deb
+                wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.48.3_Linux-64bit.deb
+                dpkg -i trivy_0.48.3_Linux-64bit.deb
                 '''
             }
         }
 
         stage('Terraform Security Scan') {
             steps {
-                sh '''
-                trivy config ./terraform
-                '''
+                dir('terraform') {
+                    sh 'trivy config .'
+                }
             }
         }
 
         stage('Terraform Init') {
             steps {
-                sh '''
-                cd terraform
-                terraform init
-                '''
+                dir('terraform') {
+                    sh 'terraform init'
+                }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                sh '''
-                cd terraform
-                terraform plan
-                '''
+                dir('terraform') {
+                    sh 'terraform plan'
+                }
             }
         }
-
     }
 }
