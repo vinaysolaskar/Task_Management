@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: task-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: taskdb123
+      POSTGRES_DB: taskdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: task-backend
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://postgres:taskdb123@postgres:5432/taskdb
+      JWT_SECRET: jwtsecretissecrettojwt
+    depends_on:
+      - postgres
+    command: sh -c "npx prisma migrate deploy && npm start"
+
+volumes:
+  postgres_data:
