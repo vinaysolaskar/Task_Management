@@ -5,7 +5,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/vinaysolaskar/Task_Management'
+                git branch: 'main', url: 'https://github.com/vinaysolaskar/Task_Management'
             }
         }
 
