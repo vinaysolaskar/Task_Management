@@ -12,10 +12,10 @@ pipeline {
         stage('Install Trivy') {
             steps {
                 sh '''
-                sudo apt-get update
-                sudo apt-get install -y wget
+                apt-get update
+                apt-get install -y wget
                 wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.48.3_Linux-64bit.deb
-                sudo dpkg -i trivy_0.48.3_Linux-64bit.deb
+                dpkg -i trivy_0.48.3_Linux-64bit.deb
                 '''
             }
         }
