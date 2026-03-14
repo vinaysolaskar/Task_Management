@@ -9,7 +9,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/vinaysolaskar/Task_Management'
+                git branch: 'main', url: 'https://github.com/vinaysolaskar/Task_Management.git'
             }
         }
 
@@ -47,7 +47,12 @@ pipeline {
                     string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     dir('terraform') {
-                        sh 'terraform plan'
+                        sh '''
+                        export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                        export AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+                        terraform plan
+                        '''
                     }
                 }
             }
