@@ -41,7 +41,7 @@ resource "aws_security_group" "web_sg" {
 # Secure EC2 Instance
 resource "aws_instance" "web_server" {
   ami           = "ami-0f5ee92e2d63afc18"
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
